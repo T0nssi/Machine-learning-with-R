@@ -1,0 +1,75 @@
+---
+title: "House Price India"
+author: "Silaa"
+date: "2023-09-12"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+### load library 
+```{r}
+library(tidyverse)
+library(caret)
+library("httr")
+library("readxl")
+GET("https://query.data.world/s/i5ncrhm7setp457dtx2ixnvsq53vsd?dws=00000", write_disk(tf <- tempfile(fileext = ".xlsx")))
+df <- read_excel(tf)
+
+#Review data
+View(df)
+
+#plot histogram for Price data
+ggplot(df,aes(x=Price))+geom_histogram()
+
+#check Price should be more zero
+df%>%select(Price)%>%filter(Price==0)
+
+#plot histogram for Price data after transform to log
+log_price<-log(df$Price)
+ggplot(data.frame(log_price),aes(log_price))+geom_histogram()
+
+#create new column
+df$log_price<-log(df$Price)
+
+
+#data preparing
+data_training<-df%>%select('number of bedrooms',
+                           'grade of the house',
+                           'living_area_renov',
+                           'living area',
+                           'log_price'
+                           )
+
+#1 Split data
+set.seed(42)
+n<-nrow(data_training)
+train_n<-sample(1:n,0.8*n)
+train_df<-data_training[train_n,]
+test_df<-data_training[-train_n,]
+
+# 2 train
+lm_model<-train(log_price~.,
+                data=train_df,
+                method="lm")
+#3 Score
+p<-predict(lm_model,newdata = test_df)
+
+#4 evaluation
+    ## mean absolute error
+mae<-mean(abs(p-test_df$log_price))
+    ## root mean absolute error
+rmae<-sqrt(mean(abs(p-test_df$log_price)**2))
+
+
+lm_model$finalModel
+
+varImp(lm_model)
+
+ggplot(df,aes(`number of bedrooms`,Price/1000))+geom_point()+theme_minimal()
+ggplot(df,aes(`grade of the house`,Price/1000))+geom_point()+theme_minimal()
+ggplot(df,aes(living_area_renov,Price/1000))+geom_point()+theme_minimal()
+ggplot(df,aes(`living area`,Price/1000))+geom_point()+theme_minimal()
+```
+
+

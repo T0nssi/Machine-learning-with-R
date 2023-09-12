@@ -52,7 +52,7 @@ rmae<-sqrt(mean(abs(p-test_df$mpg)**2))
 lm_model$finalModel
 varImp(lm_model)
 
-# HW create prediction form regression model by dataworld
+# HW create prediction form regression model by data world
 https://data.world/dataindianset2000/house-price-india
 
 
